@@ -1,18 +1,19 @@
 use tokio::net::TcpListener;
-use tokio_tungstenite::accept_async;
-use futures_util::{StreamExt, SinkExt};
 use tokio::sync::broadcast;
+use tokio_tungstenite::accept_async;
 use tungstenite::protocol::Message;
+use futures_util::{StreamExt, SinkExt};
 
 #[tokio::main]
 async fn main() {
     
-    let (tx, _rx) = broadcast::channel(100);
+    let (tx, _rx) = broadcast::channel(10000);
 
+    let server = "127.0.0.1:8800";
     
-    let listener = TcpListener::bind("127.0.0.1:8080").await.expect("Failed to bind");
+    let listener = TcpListener::bind(server).await.expect("Failed to bind");
 
-    println!("Le serveur s'est lancé sur ws://127.0.0.1:8080");
+    println!("Le serveur s'est lancé sur {server}");
 
     
     while let Ok((stream, _)) = listener.accept().await {
@@ -21,13 +22,13 @@ async fn main() {
 
         tokio::spawn(async move {
             let ws_stream = accept_async(stream).await.expect("Failed to accept");
-            println!("WebSocket connection established");
+            println!("Connexion acceptée");
 
             let (mut write, mut read) = ws_stream.split();
 
             tokio::spawn(async move {
                 while let Some(Ok(msg)) = read.next().await {
-                    println!("Received message: {}", msg);
+                    println!("Message reçu: {}", msg);
                     tx.send(msg.to_text().unwrap().to_string()).unwrap();
                 }
             });
