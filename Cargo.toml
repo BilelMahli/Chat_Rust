@@ -1,6 +1,11 @@
 [package]
-name = "Chat_Rust"
+name = "chat_app"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+tokio = { version = "1.37.0", features = ["full"] }
+tokio-tungstenite = "0.20.0"
+tungstenite = "0.20.0"
+futures-util = "0.3.30"
+serde_json = "1.0.117"
