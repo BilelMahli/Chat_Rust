@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Rust</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <input type="text" id="nameInput" placeholder="Entrez votre nom">
+    <input type="text" id="messageInput" placeholder="Entrez votre message">
+    <button onclick="sendAll()">Envoyer</button>
+
+    <div id="userContainer"></div>
+    <div id="messageContainer"></div>
+
+    <script>
+        const socket = new WebSocket("ws://127.0.0.1:8800");
+
+        socket.onopen = function() {
+            console.log("Connexion WebSocket établie");
+        }
+
+        function sendAll() {
+            const name = document.getElementById("nameInput").value;
+            const message = document.getElementById("messageInput").value;
+
+            if (name.trim() == "") {
+                alert("Veuillez entrer votre nom");
+                return; 
+            }
+            document.getElementById("nameInput").style.display = "none";
+
+            if (message.trim() != "") {
+            socket.send(name + " : " + message);
+            } else {
+                alert("Veuillez entrer un message");
+                return;
+            }       
+        }
+
+        socket.onmessage = function(event) {
+            const message = event.data;
+            const messageElement = document.createElement("p");
+            messageElement.textContent = message;
+            document.getElementById("messageContainer").appendChild(messageElement);
+        }
+
+        socket.onclose = function(event) {
+            console.log("WebSocket fermé : ", event);
+        }
+
+    </script>
+</body>
+</html>

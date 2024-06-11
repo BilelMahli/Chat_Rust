@@ -6,35 +6,32 @@ use futures_util::{StreamExt, SinkExt};
 
 #[tokio::main]
 async fn main() {
-    
-    let (tx, _rx) = broadcast::channel(10000);
+    let (tx, _rx) = broadcast::channel(100);
 
-    let server = "127.0.0.1:8800";
-    
-    let listener = TcpListener::bind(server).await.expect("Failed to bind");
+    let serveur = "127.0.0.1:8800";
+    let listener = TcpListener::bind(serveur).await.expect("Échec de la liaison");
 
-    println!("Le serveur s'est lancé sur {server}");
+    println!("Le serveur s'est lancé sur {}", serveur);
 
-    
     while let Ok((stream, _)) = listener.accept().await {
         let tx = tx.clone();
         let mut rx = tx.subscribe();
 
         tokio::spawn(async move {
-            let ws_stream = accept_async(stream).await.expect("Failed to accept");
+            let ws_stream = accept_async(stream).await.expect("Échec de l'acceptation");
             println!("Connexion acceptée");
 
-            let (mut write, mut read) = ws_stream.split();
+            let (mut ecriture, mut lecture) = ws_stream.split();
 
             tokio::spawn(async move {
-                while let Some(Ok(msg)) = read.next().await {
+                while let Some(Ok(msg)) = lecture.next().await {
                     println!("Message reçu: {}", msg);
                     tx.send(msg.to_text().unwrap().to_string()).unwrap();
                 }
             });
 
             while let Ok(msg) = rx.recv().await {
-                if write.send(Message::text(msg)).await.is_err() {
+                if ecriture.send(Message::text(msg)).await.is_err() {
                     break;
                 }
             }
